@@ -24,7 +24,7 @@ void writedatafiles(double **psi, int m, int n, int scale, MPI_Comm comm)
   MPI_Comm_rank(comm,&rank);
   MPI_Comm_size(comm,&size);
 
-  if (rank==0) printf("\n\nWriting data files ...\n");
+ // if (rank==0) printf("\n\nWriting data files ...\n");
 
   vel = (Vecvel **) arraymalloc2d(m,n,sizeof(Vecvel));
   rgb = (Vecrgb **) arraymalloc2d(m,n,sizeof(Vecrgb));
@@ -102,7 +102,7 @@ void writedatafiles(double **psi, int m, int n, int scale, MPI_Comm comm)
   free(rgb);
   free(vel);
 
-  if (rank ==0) printf("... done!\n");
+  //if (rank ==0) printf("... done!\n");
 }
 
 void writeplotfile(int m, int n, int scale)
@@ -123,7 +123,7 @@ void writeplotfile(int m, int n, int scale)
 
   fclose(gnuplot);
 
-  printf("\nWritten gnuplot script 'cfd.plt'\n");
+  //printf("\nWritten gnuplot script 'cfd.plt'\n");
 }
 
 
