@@ -85,7 +85,7 @@ void boundaryzet(double **zet, double **psi, int m, int n, MPI_Comm comm)
     }
 }
 
-void haloswap(double **x, int m, int n, MPI_Comm comm, int myid)
+void haloswap_thread(double **x, int m, int n, MPI_Comm comm, int myid)
 {
   int rank, uprank, dnrank, size;
   //int tag=1;
@@ -134,3 +134,54 @@ void haloswap(double **x, int m, int n, MPI_Comm comm, int myid)
       //printf("Swapped everything :) \n");
     }
 }
+
+void haloswap(double **x, int m, int n, MPI_Comm comm)
+{
+  int rank, uprank, dnrank, size;
+  int tag=1;
+
+  MPI_Status status;
+
+  MPI_Comm_rank(comm,&rank);
+  MPI_Comm_size(comm,&size);
+
+
+  //no need to halo swap if serial:
+
+  if (size > 1)
+    {
+      // determine uprank and downrank
+      if(rank == size-1)
+        {
+          uprank = MPI_PROC_NULL;
+        }
+      else
+        {
+          uprank = rank+1;
+        }
+
+      if (rank == 0)
+        {
+          dnrank = MPI_PROC_NULL;
+        }
+      else
+        {
+          dnrank = rank-1;
+        }
+
+      //send right boundaries and receive left ones
+
+      MPI_Sendrecv(x[m],n,MPI_DOUBLE,uprank,tag,
+                   x[0],n,MPI_DOUBLE,dnrank,tag,
+                   comm,&status);
+
+      //send left boundary and receive right
+
+      MPI_Sendrecv(x[1],n,MPI_DOUBLE,dnrank,tag,
+                   x[m+1],n,MPI_DOUBLE,uprank,tag,
+                   comm,&status);
+
+      //printf("Swapped everything :) \n");
+    }
+}
+

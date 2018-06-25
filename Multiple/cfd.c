@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 
       for(i=1;i<=lm;i++)
 	{
-	  for(j=1+myid*ln;j<1+2*myid*ln;j++)
+	  for(j=1+myid*ln;j<1+(1+myid)*ln;j++)
 	    {
 	      psi[i][j]=psitmp[i][j];
 	    }
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 	{
 	  for(i=1;i<=lm;i++)
 	    {
-	      for(j=1+myid*ln;j<1+2*myid*ln;j++)
+	      for(j=1+myid*ln;j<1+(1+myid)*ln;j++)
 		{
 		  zet[i][j]=zettmp[i][j];
 		}
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
 
       //do a boundary swap ************
 
-      haloswap(psi,lm,ln,comm,myid);
+      haloswap_thread(psi,lm,ln,comm,myid);
 
       /*if(myid == 0 || myid == nthreads-1)
         {

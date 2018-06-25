@@ -8,7 +8,7 @@ void jacobistep(double **psinew, double **psi, int m, int n, int myid,int ln)
 
   for(i=1;i<=m;i++)
     {
-      for(j=1+ln*myid;j<1+2*ln*myid;j++)
+      for(j=1+ln*myid;j<1+ln*(1+myid);j++)
 	{
 	  psinew[i][j]=0.25*(psi[i-1][j]+psi[i+1][j]+psi[i][j-1]+psi[i][j+1]);
         }
@@ -23,7 +23,7 @@ void jacobistepvort(double **zetnew, double **psinew,
 
   for(i=1;i<=m;i++)
     {
-      for(j=1+ln*myid;j<=1+2*ln*myid;j++)
+      for(j=1+ln*myid;j<=1+ln*(1+myid);j++)
 	{
 	  psinew[i][j]=0.25*(  psi[i-1][j]+psi[i+1][j]+psi[i][j-1]+psi[i][j+1]
 			     - zet[i][j] );
@@ -32,7 +32,7 @@ void jacobistepvort(double **zetnew, double **psinew,
 
   for(i=1;i<=m;i++)
     {
-      for(j=1+ln*myid;j<=1+2*ln*myid;j++)
+      for(j=1+ln*myid;j<=1+ln*(1+myid);j++)
 	{
 	  zetnew[i][j]=0.25*(zet[i-1][j]+zet[i+1][j]+zet[i][j-1]+zet[i][j+1])
 	    - re/16.0*(

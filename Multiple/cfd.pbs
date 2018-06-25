@@ -3,10 +3,16 @@
 
 #PBS -l select=1
 #PBS -l walltime=00:05:00
-#PBS -A y14
+#PBS -A d154
 #PBS -N cfd
 
 #Change to directory that the job was submitted from
 cd $PBS_O_WORKDIR
 
-aprun -n 4 ./cfd 4 5000
+# Set the number of threads to 4
+# There are 4 OpenMP threads per MPI process
+OMP_NUM_THREADS=4
+wxport OMP_NUM_THREADS
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
+
+aprun -n 4 -d 4 ./cfd 4 5000
