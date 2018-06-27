@@ -12,7 +12,7 @@ cd $PBS_O_WORKDIR
 # Set the number of threads to 4
 # There are 4 OpenMP threads per MPI process
 OMP_NUM_THREADS=4
-wxport OMP_NUM_THREADS
+export OMP_NUM_THREADS
 export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
 
 aprun -n 4 -d 4 ./cfd 4 5000

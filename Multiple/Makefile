@@ -1,9 +1,9 @@
 # System dependent definitions
 
 # For ARCHER
-CC=	cc
-CFLAGS=
-LFLAGS=
+CC=	cc 
+CFLAGS= -craympich-mt
+LFLAGS=  
 
 # For Cirrus or any standard Linux system
 #CC=	mpicc

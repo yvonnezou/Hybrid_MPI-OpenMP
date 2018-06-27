@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
   //parallelisation parameters
   int rank, size;
-  int nthreads;			//number of threads & thread id
+  //int nthreads;			//number of threads & thread id
   MPI_Comm comm;
 
 
@@ -61,9 +61,9 @@ int main(int argc, char **argv)
   MPI_Comm_rank(comm,&rank);
   MPI_Comm_size(comm,&size);
 
-  nthreads = omp_get_num_threads();
+  //nthreads = omp_get_num_threads();
   //ithread = OMP_GET_THREAD_NUM();
-
+  
   //check command line parameters and parse them
 
   if (argc <3|| argc >4)
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 
   if (rank == 0)
     {
-      printf("Running CFD on %d x %d grid using %d process(es), %d thread(s) \n",m,n,size,nthreads);
+      printf("Running CFD on %d x %d grid using %d process(es)\n",m,n,size);
     }
 
   //allocate arrays
@@ -237,13 +237,17 @@ int main(int argc, char **argv)
 
   
   //OpenMP region
-#pragma omp parallel default (none) shared(zettmp,psitmp,zet,psi,nthreads,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
+#pragma omp parallel default (none) shared(zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
   {
-  //int nthreads = omp_get_num_threads();
+  int nthreads = omp_get_num_threads();
   int myid = omp_get_thread_num();
 
   int ln = n/nthreads;
   
+  if (n%nthreads != 0)
+    {
+      printf("unequal/n");
+    } 
   //set arrays in omp threads
   //double **psi_omp,**psitmp_omp,**zet_omp,**zettmp_omp;
   //psi_omp    = (double **) arraymalloc2d(llm+2,n+2,sizeof(double));
@@ -274,7 +278,7 @@ int main(int argc, char **argv)
   for(iter=1;iter<=numiter;iter++)
     {
       //calculate psi for next iteration
-      
+      printf("iter = %d myid = %d\n",iter,myid);
       if (irrotational)
 	{
 	  jacobistep(psitmp,psi,lm,ln,myid,ln);
@@ -385,7 +389,7 @@ int main(int argc, char **argv)
 	    {
 	      //if (!checkerr)
 		//{
-		  printf("Completed iteration %d\n",iter);
+		  printf("Thread %d Completed iteration %d\n",myid,iter);
 		//}
 	      //else
 		//{
