@@ -2,7 +2,7 @@
 #!/bin/bash --login
 
 #PBS -l select=1
-#PBS -l walltime=00:05:00
+#PBS -l walltime=00:10:00
 #PBS -A d154
 #PBS -N cfd
 

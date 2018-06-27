@@ -14,7 +14,7 @@
 int main(int argc, char **argv)
 {
   int printfreq=1000; //output frequency
-  double localerror=0.0, error=0.0, localbnorm=0.0,bnorm=0.0;
+  double localerror, error, localbnorm,bnorm;
   double tolerance=0.0; //tolerance for convergence. <=0 means do not check
 
   //main arrays
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 
   //compute normalisation factor for error
 
-  //localbnorm=0.;
+  localbnorm=0.0;
 
   for (i=0;i<lm+2;i++)
     {
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
 
   
   //OpenMP region
-#pragma omp parallel default (none) shared(zettmp,psitmp,zet,psi) private(iter,lm,re,checkerr,i,j,numiter,irrotational,n,nthreads,comm,printfreq,rank)
+#pragma omp parallel default (none) shared(zettmp,psitmp,zet,psi,nthreads,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
   {
   //int nthreads = omp_get_num_threads();
   int myid = omp_get_thread_num();
@@ -383,10 +383,10 @@ int main(int argc, char **argv)
 	{
 	  if (rank==0)
 	    {
-	      if (!checkerr)
-		{
+	      //if (!checkerr)
+		//{
 		  printf("Completed iteration %d\n",iter);
-		}
+		//}
 	      //else
 		//{
 		 // printf("Completed iteration %d, error = %g\n",iter,error);
