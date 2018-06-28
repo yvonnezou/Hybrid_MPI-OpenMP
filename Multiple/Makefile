@@ -2,7 +2,7 @@
 
 # For ARCHER
 CC=	cc 
-CFLAGS= -craympich-mt
+CFLAGS= 
 LFLAGS=  
 
 # For Cirrus or any standard Linux system

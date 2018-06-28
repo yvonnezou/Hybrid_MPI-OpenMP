@@ -278,7 +278,8 @@ int main(int argc, char **argv)
   for(iter=1;iter<=numiter;iter++)
     {
       //calculate psi for next iteration
-      printf("iter = %d myid = %d\n",iter,myid);
+      //printf("iter = %d myid = %d\n",iter,myid);
+      
       if (irrotational)
 	{
 	  jacobistep(psitmp,psi,lm,ln,myid,ln);
@@ -325,7 +326,6 @@ int main(int argc, char **argv)
       */
 
       //copy back ***********
-
       for(i=1;i<=lm;i++)
 	{
 	  for(j=1+myid*ln;j<1+(1+myid)*ln;j++)
@@ -344,7 +344,7 @@ int main(int argc, char **argv)
 		}
 	    }
 	}
-
+      
       //do a boundary swap ************
 
       haloswap_thread(psi,lm,ln,comm,myid);
@@ -355,11 +355,13 @@ int main(int argc, char **argv)
           sendrecv
         }*/
 
+      /*!!!!
       if (!irrotational)
 	{
 	  haloswap(zet,lm,n,comm);
 	  //boundaryzet(zet,psi,lm,n,comm);
 	}
+      */
 
       /*
       for(i=1;i<=llm;i++)
@@ -385,17 +387,17 @@ int main(int argc, char **argv)
 
       if(iter%printfreq == 0)
 	{
-	  if (rank==0)
-	    {
+	 // if (rank==0)
+	   // {
 	      //if (!checkerr)
 		//{
-		  printf("Thread %d Completed iteration %d\n",myid,iter);
+		  printf("Rank %d Thread %d Completed iteration %d\n",rank,myid,iter);
 		//}
 	      //else
 		//{
 		 // printf("Completed iteration %d, error = %g\n",iter,error);
 		//}
-	    }
+	   // }
 	}
     }
 

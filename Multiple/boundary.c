@@ -121,13 +121,13 @@ void haloswap_thread(double **x, int m, int n, MPI_Comm comm, int myid)
 
       //send right boundaries and receive left ones
 
-      MPI_Sendrecv(&x[m][1+n*myid],n,MPI_DOUBLE,uprank,myid,
+      MPI_Sendrecv(&x[m][1+n*myid],n,MPI_DOUBLE,uprank,myid*100,
 		   &x[0][1+n*myid],n,MPI_DOUBLE,dnrank,myid*100,
 		   comm,&status);
 
       //send left boundary and receive right
 
-      MPI_Sendrecv(&x[1][1+n*myid],n,MPI_DOUBLE,dnrank,myid*100,
+      MPI_Sendrecv(&x[1][1+n*myid],  n,MPI_DOUBLE,dnrank,myid,
 		   &x[m+1][1+n*myid],n,MPI_DOUBLE,uprank,myid,
 		   comm,&status);
 
