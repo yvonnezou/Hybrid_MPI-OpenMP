@@ -45,6 +45,13 @@ int main(int argc, char **argv)
 
   double tstart, tstop, ttot, titer;
 
+  double *time_thread;
+
+  //initial time array
+  time_thread = (double*)malloc(sizeof(double) * 20);
+  for(i=0;i<20;i++)
+     time_thread[i] = 0;
+
   //parallelisation parameters
   int rank, size;
   //int nthreads;			//number of threads & thread id
@@ -61,8 +68,11 @@ int main(int argc, char **argv)
   MPI_Comm_rank(comm,&rank);
   MPI_Comm_size(comm,&size);
 
-  //nthreads = omp_get_num_threads();
+/*
+#pragma omp parallel shared(nthreads)
+  nthreads = omp_get_num_threads();
   //ithread = OMP_GET_THREAD_NUM();
+*/
   
   //check command line parameters and parse them
 
@@ -237,10 +247,13 @@ int main(int argc, char **argv)
 
   
   //OpenMP region
-#pragma omp parallel default (none) shared(zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
+#pragma omp parallel default (none) shared(time_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
   {
   int nthreads = omp_get_num_threads();
   int myid = omp_get_thread_num();
+  double tstart_thread,tstop_thread;
+
+  tstart_thread=MPI_Wtime();
 
   int ln = n/nthreads;
   
@@ -383,8 +396,12 @@ int main(int argc, char **argv)
       }
       */
 
-      //print loop information
 
+      //timer in the thread
+      tstop_thread = MPI_Wtime();
+      time_thread[myid] = time_thread[myid] + tstop_thread - tstart_thread;
+
+      //print loop information
       if(iter%printfreq == 0)
 	{
 	 // if (rank==0)
@@ -421,6 +438,12 @@ int main(int argc, char **argv)
       printf("Each iteration took %g seconds\n",titer);
     }
 
+  //print time in the thread
+  printf("rank = %d\n",rank);
+  for(i=0;i<20;i++)
+     printf("%lf  ",time_thread[i]);
+  printf("\n");
+
   //output results
 
   writedatafiles(psi,lm,n, scalefactor,comm);
@@ -430,6 +453,7 @@ int main(int argc, char **argv)
   //free un-needed arrays
   free(psi);
   free(psitmp);
+  free(time_thread);
 
   if (!irrotational)
     {
