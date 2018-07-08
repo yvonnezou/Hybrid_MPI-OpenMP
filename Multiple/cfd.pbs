@@ -9,10 +9,11 @@
 #Change to directory that the job was submitted from
 cd $PBS_O_WORKDIR
 
-# Set the number of threads to 4
-# There are 4 OpenMP threads per MPI process
-OMP_NUM_THREADS=4
+# Set the number of threads to 12
+# There are 12 OpenMP threads per MPI process
+OMP_NUM_THREADS=12
 export OMP_NUM_THREADS
+export KMP_AFFINITY=disabled
 export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
 
-aprun -n 4 -d 4 ./cfd 4 5000
+aprun -n 2 -N 2 -d 12 ./cfd 3 5000

@@ -48,8 +48,8 @@ int main(int argc, char **argv)
   double *time_thread;
 
   //initial time array
-  time_thread = (double*)malloc(sizeof(double) * 20);
-  for(i=0;i<20;i++)
+  time_thread = (double*)malloc(sizeof(double) * 12);
+  for(i=0;i<12;i++)
      time_thread[i] = 0;
 
   //parallelisation parameters
@@ -439,8 +439,8 @@ int main(int argc, char **argv)
     }
 
   //print time in the thread
-  printf("rank = %d\n",rank);
-  for(i=0;i<20;i++)
+  //printf("rank = %d\n",rank);
+  for(i=0;i<12;i++)
      printf("%lf  ",time_thread[i]);
   printf("\n");
 

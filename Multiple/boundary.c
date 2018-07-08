@@ -91,6 +91,7 @@ void haloswap_thread(double **x, int m, int n, MPI_Comm comm, int myid)
   //int tag=1;
 
   MPI_Status status;
+  MPI_Request request;
 
   MPI_Comm_rank(comm,&rank);
   MPI_Comm_size(comm,&size);
@@ -130,6 +131,16 @@ void haloswap_thread(double **x, int m, int n, MPI_Comm comm, int myid)
       MPI_Sendrecv(&x[1][1+n*myid],  n,MPI_DOUBLE,dnrank,myid,
 		   &x[m+1][1+n*myid],n,MPI_DOUBLE,uprank,myid,
 		   comm,&status);
+
+/*unblocking way
+      MPI_Isend(&x[m][1+n*myid],n,MPI_DOUBLE,uprank,myid*100,comm,&request);
+      MPI_Irecv(&x[0][1+n*myid],n,MPI_DOUBLE,dnrank,myid*100,comm,&request);
+      MPI_Wait(&request,&status);
+
+      MPI_Isend(&x[1][1+n*myid],n,MPI_DOUBLE,uprank,myid,comm,&request);
+      MPI_Irecv(&x[m+1][1+n*myid],n,MPI_DOUBLE,dnrank,myid,comm,&request);
+      MPI_Wait(&request,&status);
+*/
 
       //printf("Swapped everything :) \n");
     }
