@@ -2,13 +2,13 @@
 
 #include "jacobi.h"
 
-void jacobistep(double **psinew, double **psi, int m, int n, int myid,int ln)
+void jacobistep(double **psinew, double **psi, int m, int n, int myid)
 {
   int i, j;
 
   for(i=1;i<=m;i++)
     {
-      for(j=1+ln*myid;j<1+ln*(1+myid);j++)
+      for(j=1+n*myid;j<=n*(1+myid);j++)
 	{
 	  psinew[i][j]=0.25*(psi[i-1][j]+psi[i+1][j]+psi[i][j-1]+psi[i][j+1]);
         }

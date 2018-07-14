@@ -235,113 +235,43 @@ int main(int argc, char **argv)
       printf("\nStarting main loop...\n\n");
     }
 
-  //int *localerror_omp;
-
-  //localerror_omp = rdouble *)malloc(20*sizeof(double));
-
-  //barrier for accurate timing - not needed for correctness
-
   MPI_Barrier(comm);
 
   tstart=MPI_Wtime();
-
   
   //OpenMP region
-#pragma omp parallel default (none) shared(time_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr,iter) private(i,j)
+#pragma omp parallel default (none) shared(time_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr) private(i,j)
   {
   int nthreads = omp_get_num_threads();
   int myid = omp_get_thread_num();
   double tstart_thread,tstop_thread;
+  int iter;
 
-  tstart_thread=MPI_Wtime();
+  tstart_thread=omp_get_wtime();
 
+  //The size of each chunk in every thread
   int ln = n/nthreads;
   
   if (n%nthreads != 0)
     {
       printf("unequal/n");
     } 
-  //set arrays in omp threads
-  //double **psi_omp,**psitmp_omp,**zet_omp,**zettmp_omp;
-  //psi_omp    = (double **) arraymalloc2d(llm+2,n+2,sizeof(double));
-  //psitmp_omp = (double **) arraymalloc2d(llm+2,n+2,sizeof(double));
-
-  /*
-  for(i=0;i<llm+2;i++){
-     for(j=0;j<n+2;j++){
-        psi_omp[i][j] = psi[myid*llm+i][j];
-     }
-  }
-  */
-
-  /*
-  if (!irrotational)
-     {
-        zet_omp    = (double **) arraymalloc2d(llm+2,n+2,sizeof(double));
-        zettmp_omp = (double **) arraymalloc2d(llm+2,n+2,sizeof(double));
-
-        for(i=0;i<llm+2;i++){
-           for(j=0;j<n+2;j++){
-              zet_omp[i][j] = zet[myid*llm+i][j];
-           }
-        }  
-     }
-  */
 
   for(iter=1;iter<=numiter;iter++)
-    {
-      //calculate psi for next iteration
-      //printf("iter = %d myid = %d\n",iter,myid);
-      
+    {     
       if (irrotational)
 	{
-	  jacobistep(psitmp,psi,lm,ln,myid,ln);
+	  jacobistep(psitmp,psi,lm,ln,myid);
 	}
       else
 	{
 	  jacobistepvort(zettmp,psitmp,zet,psi,lm,ln,re,myid,ln);
 	}
 
-      //calculate current error if required
-      //get rid of it because of the barrier
-      /*
-      if (checkerr || iter == numiter)
-	{
-	  localerror_omp[myid] = deltasq(psitmp_omp,psi_omp,llm,n);
-
-	  if(!irrotational)
-	    {
-	      localerror_omp[myid] += deltasq(zettmp_omp,zet_omp,llm,n);
-	    }
-
-#pragma omp barrier
-          for(i=0;i<nthreads;i++)
-              localerror += localerror_omp[myid];
-
-	  MPI_Allreduce(&localerror,&error,1,MPI_DOUBLE,MPI_SUM,comm);
-	  error=sqrt(error);
-	  error=error/bnorm;
-	}
-
-      //quit early if we have reached required tolerance
-
-      if (checkerr)
-	{
-	  if (error < tolerance)
-	    {
-	      if (rank == 0)
-		{
-		  printf("Converged on iteration %d\n",iter);
-		}
-	      break;
-	    }
-	}
-      */
-
       //copy back ***********
       for(i=1;i<=lm;i++)
 	{
-	  for(j=1+myid*ln;j<1+(1+myid)*ln;j++)
+	  for(j=1+myid*ln;j<=(1+myid)*ln;j++)
 	    {
 	      psi[i][j]=psitmp[i][j];
 	    }
@@ -361,72 +291,31 @@ int main(int argc, char **argv)
       //do a boundary swap ************
 
       haloswap_thread(psi,lm,ln,comm,myid);
-
-      /*if(myid == 0 || myid == nthreads-1)
-        {
-          sendrecv
-          sendrecv
-        }*/
-
-      /*!!!!
-      if (!irrotational)
-	{
-	  haloswap(zet,lm,n,comm);
-	  //boundaryzet(zet,psi,lm,n,comm);
-	}
-      */
-
-      /*
-      for(i=1;i<=llm;i++)
-        {
-          for(j=1;j<=n;j++)
-            {
-               psi[i+myid*llm][j] = psi_omp[i][j];
-            }
-        }
-
-      if(!irrotational) {
-      for(i=1;i<=llm;i++)
-        {
-          for(j=1;j<=n;j++)
-            {
-               zet[i+myid*llm][j] = zet_omp[i][j];
-            }
-        }
+      
       }
-      */
-
 
       //timer in the thread
-      tstop_thread = MPI_Wtime();
-      time_thread[myid] = time_thread[myid] + tstop_thread - tstart_thread;
+      tstop_thread = omp_get_wtime();
+      time_thread[myid] = tstop_thread - tstart_thread;
 
       //print loop information
-      if(iter%printfreq == 0)
+
+      /*if(iter%printfreq == 0)
 	{
-	 // if (rank==0)
-	   // {
-	      //if (!checkerr)
-		//{
-		  printf("Rank %d Thread %d Completed iteration %d\n",rank,myid,iter);
-		//}
-	      //else
-		//{
-		 // printf("Completed iteration %d, error = %g\n",iter,error);
-		//}
-	   // }
+	  printf("Rank %d Thread %d Completed iteration %d\n",rank,myid,iter);
 	}
-    }
+      */
+    
 
   }
 
-  if (iter > numiter) iter=numiter;
+  //if (iter > numiter) iter=numiter;
 
   MPI_Barrier(comm);
   tstop=MPI_Wtime();
 
   ttot=tstop-tstart;
-  titer=ttot/(double)iter;
+  titer=ttot/(double)numiter;
 
 
   //print out some stats
@@ -434,7 +323,7 @@ int main(int argc, char **argv)
     {
       printf("\n... finished\n");
       //printf("After %d iterations, the error is %g\n",iter,error);
-      printf("Time for %d iterations was %g seconds\n",iter,ttot);
+      printf("Time for %d iterations was %g seconds\n",numiter,ttot);
       printf("Each iteration took %g seconds\n",titer);
     }
 
