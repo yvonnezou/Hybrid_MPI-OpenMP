@@ -16,4 +16,4 @@ export OMP_NUM_THREADS
 export KMP_AFFINITY=disabled
 export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
 
-aprun -n 16 -N 2-d 12 ./cfd 3 5000
+aprun -n 16 -N 2 -d 12 ./cfd 3 5000
