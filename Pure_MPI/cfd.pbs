@@ -1,0 +1,17 @@
+# ARCHER PBS Script
+#!/bin/bash --login
+
+#PBS -l select=16
+#PBS -l walltime=01:30:00
+#PBS -A d154
+#PBS -N cfd
+
+#Change to directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+#aprun -n 384 -N 24 ./cfd 384 5000 >out
+
+for ((i=0;i<100;i++)); do
+	aprun -n 384 -N 24 ./cfd 384 5000 >out$i.txt
+done
+

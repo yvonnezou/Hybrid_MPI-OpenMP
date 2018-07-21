@@ -39,8 +39,8 @@ int main(int argc, char **argv)
   int iter;
   int i,j;
 
-  double tstart, tstop, ttot, titer;
-  double *time;
+  double tstart, tstop1,tstop2,ttot_iter,ttot_comp,ttot_comm,titer;
+  double **time_iter,**time_comp,**time_comm;
 
   //parallelisation parameters
   int rank, size;
@@ -59,7 +59,9 @@ int main(int argc, char **argv)
 
   //if(rank==0)
   //  {
-      time=(double *)malloc(size*sizeof(double));
+      time_iter=(double **)arraymalloc2d(5000,384,sizeof(double));
+      time_comp=(double **)arraymalloc2d(5000,384,sizeof(double));
+      time_comm=(double **)arraymalloc2d(5000,384,sizeof(double));
   //  }
 
   //check command line parameters and parse them
@@ -225,12 +227,16 @@ int main(int argc, char **argv)
 
   //barrier for accurate timing - not needed for correctness
 
-  MPI_Barrier(comm);
+  //MPI_Barrier(comm);
 
-  tstart=MPI_Wtime();
+  //tstart=MPI_Wtime();
 
   for(iter=1;iter<=numiter;iter++)
     {
+      //barrier for accurate timing
+      MPI_Barrier(comm);
+      tstart=MPI_Wtime();    
+
       //calculate psi for next iteration
 
       if (irrotational)
@@ -293,6 +299,8 @@ int main(int argc, char **argv)
 	    }
 	}
 
+      tstop1 = MPI_Wtime();
+
       //do a boundary swap
 
       haloswap(psi,lm,n,comm);
@@ -319,16 +327,24 @@ int main(int argc, char **argv)
 		}
 	    }
 	}*/
+      tstop2=MPI_Wtime();
+      
+      ttot_iter = tstop2 - tstart;
+      ttot_comp = tstop1 - tstart;
+      ttot_comm = tstop2 - tstop1;
+      MPI_Gather(&ttot_iter,1,MPI_DOUBLE,time_iter[iter-1],1,MPI_DOUBLE,0,comm);
+      MPI_Gather(&ttot_comp,1,MPI_DOUBLE,time_comp[iter-1],1,MPI_DOUBLE,0,comm);
+      MPI_Gather(&ttot_comm,1,MPI_DOUBLE,time_comm[iter-1],1,MPI_DOUBLE,0,comm);
     }
 
   if (iter > numiter) iter=numiter;
 
-  tstop=MPI_Wtime();
+  //tstop=MPI_Wtime();
 
-  ttot=tstop-tstart;
+  //ttot=tstop-tstart;
   //titer=ttot/(double)iter;
 
-  MPI_Gather(&ttot,1,MPI_DOUBLE,time,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+  //MPI_Gather(&ttot,1,MPI_DOUBLE,time,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
 
   /*
   MPI_Barrier(comm);
@@ -341,26 +357,47 @@ int main(int argc, char **argv)
   //print out some stats
   if (rank == 0)
     {
-     /* printf("\n... finished\n");
-      printf("After %d iterations, the error is %g\n",iter,error);*/
-      // printf("Time for %d iterations was %g seconds\n",iter,ttot);
-      //printf("Each iteration took %g seconds\n",titer);
-
-      for(i=0;i<size;i++)
-	printf("%g  ",time[i]);
-	printf("\n");
-    }
+      printf("time_iter:\n");
+      for(i=0;i<5000;i++) 
+        {
+          for(j=0;j<384;j++) 
+            {
+              printf("%f  ",time_iter[i][j]);
+            }
+	  printf("\n");
+         }
+      printf("time_comp:\n");
+      for(i=0;i<5000;i++)
+        {
+          for(j=0;j<384;j++)
+            {
+              printf("%f  ",time_comp[i][j]);
+            }
+          printf("\n");
+         }
+      printf("time_comm:\n");
+      for(i=0;i<5000;i++)
+        {
+          for(j=0;j<384;j++)
+            {
+              printf("%f  ",time_comm[i][j]);
+            }
+          printf("\n");
+         }
+    }  
 
   //output results
 
-  writedatafiles(psi,lm,n, scalefactor,comm);
+  //writedatafiles(psi,lm,n, scalefactor,comm);
 
-  if (rank == 0) writeplotfile(m,n,scalefactor);
+  //if (rank == 0) writeplotfile(m,n,scalefactor);
 
   //free un-needed arrays
   free(psi);
   free(psitmp);
-  free(time);
+  free(time_iter);
+  free(time_comm);
+  free(time_comp);
 
   if (!irrotational)
     {
