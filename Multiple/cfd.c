@@ -45,12 +45,25 @@ int main(int argc, char **argv)
 
   double tstart, tstop, ttot, titer;
 
-  double *time_thread;
+  double **time_iter, **time_comm, **time_comp, **time_iter_thread, **time_comm_thread, **time_comp_thread;
 
   //initial time array
-  time_thread = (double*)malloc(sizeof(double) * 12);
-  for(i=0;i<12;i++)
-     time_thread[i] = 0;
+  time_iter    = (double **) arraymalloc2d(5000,384,sizeof(double));
+  time_comm    = (double **) arraymalloc2d(5000,384,sizeof(double));
+  time_comp    = (double **) arraymalloc2d(5000,384,sizeof(double));
+  time_iter_thread = (double **)arraymalloc2d(5000,12,sizeof(double));
+  time_comm_thread = (double **)arraymalloc2d(5000,12,sizeof(double));
+  time_comp_thread = (double **)arraymalloc2d(5000,12,sizeof(double));
+
+/*
+  for(i=0;i<5000;i++){
+     for(j=0;j<384;j++){
+        time_iter[i][j] = 0;
+	time_comm[i][j] = 0;
+        time_comp[i][j] = 0;
+     }
+  }
+*/
 
   //parallelisation parameters
   int rank, size;
@@ -98,7 +111,7 @@ int main(int argc, char **argv)
 	  re=-1.0;
 	}
 	
-      if(!checkerr)
+      /*if(!checkerr)
 	{
 	  printf("Scale Factor = %i, iterations = %i\n",scalefactor, numiter);
 	}
@@ -106,15 +119,16 @@ int main(int argc, char **argv)
 	{
 	  printf("Scale Factor = %i, iterations = %i, tolerance= %g\n",scalefactor,numiter,tolerance);
 	}
+      */
 
-      if (irrotational)
+      /*if (irrotational)
 	{
 	  printf("Irrotational flow\n");
 	}
       else
 	{
 	  printf("Reynolds number = %f\n",re);
-	}
+	}*/
     }
 
 
@@ -147,10 +161,11 @@ int main(int argc, char **argv)
       return -1;
     }
 
-  if (rank == 0)
+  /*if (rank == 0)
     {
       printf("Running CFD on %d x %d grid using %d process(es)\n",m,n,size);
     }
+  */
 
   //allocate arrays
 
@@ -230,24 +245,22 @@ int main(int argc, char **argv)
 
   //begin iterative Jacobi loop
 
-  if (rank == 0)
-    {
-      printf("\nStarting main loop...\n\n");
-    }
+  //if (rank == 0)
+  //  {
+  //    printf("\nStarting main loop...\n\n");
+  //  }
 
   MPI_Barrier(comm);
 
-  tstart=MPI_Wtime();
+  //tstart=MPI_Wtime();
   
   //OpenMP region
-#pragma omp parallel default (none) shared(time_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr) private(i,j)
+#pragma omp parallel default (none) shared(time_iter_thread,time_comm_thread,time_comp_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr) private(i,j)
   {
   int nthreads = omp_get_num_threads();
   int myid = omp_get_thread_num();
-  double tstart_thread,tstop_thread;
+  double tstart_thread,tstop1_thread,tstop2_thread;
   int iter;
-
-  tstart_thread=omp_get_wtime();
 
   //The size of each chunk in every thread
   int ln = n/nthreads;
@@ -257,8 +270,11 @@ int main(int argc, char **argv)
       printf("unequal/n");
     } 
 
-  for(iter=1;iter<=numiter;iter++)
+  for(iter=0;iter<numiter;iter++)
     {     
+
+      tstart_thread = omp_get_wtime();
+
       if (irrotational)
 	{
 	  jacobistep(psitmp,psi,lm,ln,myid);
@@ -267,7 +283,6 @@ int main(int argc, char **argv)
 	{
 	  jacobistepvort(zettmp,psitmp,zet,psi,lm,ln,re,myid,ln);
 	}
-
       //copy back ***********
       for(i=1;i<=lm;i++)
 	{
@@ -287,16 +302,20 @@ int main(int argc, char **argv)
 		}
 	    }
 	}
+
+      tstop1_thread = omp_get_wtime();
       
       //do a boundary swap ************
-
       haloswap_thread(psi,lm,ln,comm,myid);
-      
-      }
 
-      //timer in the thread
-      tstop_thread = omp_get_wtime();
-      time_thread[myid] = tstop_thread - tstart_thread;
+      tstop2_thread = omp_get_wtime();
+      
+      //timer in every thread
+
+      time_iter_thread[iter][myid] = tstop2_thread - tstart_thread;
+      time_comp_thread[iter][myid] = tstop1_thread - tstart_thread;
+      time_comm_thread[iter][myid] = tstop2_thread - tstop1_thread;
+      }
 
       //print loop information
 
@@ -312,37 +331,69 @@ int main(int argc, char **argv)
   //if (iter > numiter) iter=numiter;
 
   MPI_Barrier(comm);
-  tstop=MPI_Wtime();
+  //tstop=MPI_Wtime();
 
-  ttot=tstop-tstart;
-  titer=ttot/(double)numiter;
+  //ttot=tstop-tstart;
+  //titer=ttot/(double)numiter;
 
 
   //print out some stats
-  if (rank == 0)
+  /*if (rank == 0)
     {
       printf("\n... finished\n");
       //printf("After %d iterations, the error is %g\n",iter,error);
       printf("Time for %d iterations was %g seconds\n",numiter,ttot);
       printf("Each iteration took %g seconds\n",titer);
     }
+  */
 
   //print time in the thread
   //printf("rank = %d\n",rank);
-  for(i=0;i<12;i++)
-     printf("%lf  ",time_thread[i]);
-  printf("\n");
+  for(i=0;i<5000;i++) {
+     MPI_Gather(time_iter_thread[i],12,MPI_DOUBLE,time_iter[i],12,MPI_DOUBLE,0,comm);
+     MPI_Gather(time_comp_thread[i],12,MPI_DOUBLE,time_comp[i],12,MPI_DOUBLE,0,comm);
+     MPI_Gather(time_comm_thread[i],12,MPI_DOUBLE,time_comm[i],12,MPI_DOUBLE,0,comm);
+  }
+
+  //print runtime
+  if(rank == 0) {
+     for(i=0;i<5000;i++) {
+        for(j=0;j<384;j++) {
+	    printf("%f  ",time_iter[i][j]);
+        }
+        printf("\n");
+     }
+
+     for(i=0;i<5000;i++) {
+        for(j=0;j<384;j++) {
+              printf("%f  ",time_comp[i][j]);
+         }
+         printf("\n");
+     }
+
+     for(i=0;i<5000;i++) {
+        for(j=0;j<384;j++) {
+              printf("%f  ",time_comm[i][j]);
+         }
+         printf("\n");
+     }
+   }
 
   //output results
 
-  writedatafiles(psi,lm,n, scalefactor,comm);
+  //writedatafiles(psi,lm,n, scalefactor,comm);
 
-  if (rank == 0) writeplotfile(m,n,scalefactor);
+  //if (rank == 0) writeplotfile(m,n,scalefactor);
 
   //free un-needed arrays
   free(psi);
   free(psitmp);
-  free(time_thread);
+  free(time_iter);
+  free(time_comp);
+  free(time_comm);
+  free(time_comm_thread);
+  free(time_comp_thread);
+  free(time_iter_thread);
 
   if (!irrotational)
     {
@@ -351,11 +402,5 @@ int main(int argc, char **argv)
     }
 
   MPI_Finalize();
-
-  if (rank == 0)
-    {
-      printf("... finished\n");
-    }
-
   return 0;
 }

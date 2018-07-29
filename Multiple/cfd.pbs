@@ -1,8 +1,8 @@
 # ARCHER PBS Script
 #!/bin/bash --login
 
-#PBS -l select=8
-#PBS -l walltime=00:1:00
+#PBS -l select=16
+#PBS -l walltime=00:05:00
 #PBS -A d154
 #PBS -N cfd
 
@@ -11,9 +11,12 @@ cd $PBS_O_WORKDIR
 
 # Set the number of threads to 12
 # There are 12 OpenMP threads per MPI process
-OMP_NUM_THREADS=1
+OMP_NUM_THREADS=12
 export OMP_NUM_THREADS
 export KMP_AFFINITY=disabled
 export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
 
-aprun -n 16 -N 2 -d 12 ./cfd 3 5000
+#for((i=0;i<100;i++)); do
+	aprun -n 32 -N 2 -d 12 ./cfd 384 5000 >outindep99.txt
+#done
+
