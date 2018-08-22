@@ -17,9 +17,9 @@ In each folder, there are two folders named `Archer` and `Cirrus` storing corres
  - cfd.c: Main file
  - cfdio.c: Output files
  - jacobi.c: Do the Jacobi Algorithm calculations
- - cfd.pbs/t2cfd.pbs: The script to upload the programme to backend
+ - cfd.pbs/t2cfd.pbs: The script to submit the programme to backend
  - runsplit.sh: Process the data
- - run.sh: Upload the programme to backend 100 times
+ - run.sh: Submit the programme to backend 100 times
 
 In the Data analytics and results folder, the folders, `3D images`, `combined images` and `detailed images` store different kind of output. In `combined image`, the maximum, minimum and average value are in the same figure. In `detailed image`, they are separate. There also two Python script inside:
  - 3d.py: Plot 3D images
@@ -27,13 +27,13 @@ In the Data analytics and results folder, the folders, `3D images`, `combined im
 
 ### Usage
 ---
-1. Download the package and upload to ARCHER or Cirrus
+1. Download the package and upload to ARCHER or Cirrus by `scp` command.
 2. Enter the corresponding folder and `make` the programme. On Cirrus, it is necessary to load module intel-compilers-17 and intel-mpi-17 first.
     ```
     $ module load intel-compilers-17
     $ module load intel-mpi-17
     ```
-3. Upload it to backend. 
+3. Submit it to backend. 
     On Archer:
     ```
     $ qsub cfd.pbs
