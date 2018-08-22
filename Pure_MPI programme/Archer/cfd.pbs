@@ -1,0 +1,20 @@
+# ARCHER PBS Script
+# It is for pure-MPI programme on ARCHER.
+# The programme will run 100 times on same set of nodes.
+# It uses 16 nodes and 384 cores. 24 cores on each node. 
+# The output is stored in out*.txt
+
+#!/bin/bash --login
+
+#PBS -l select=16
+#PBS -l walltime=01:30:00
+#PBS -A d154
+#PBS -N cfd
+
+#Change to directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+for ((i=0;i<100;i++)); do
+	aprun -n 384 -N 24 ./cfd 384 5000 >out$i.txt
+done
+

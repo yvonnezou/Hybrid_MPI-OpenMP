@@ -1,0 +1,32 @@
+# Cirrus PBS Script
+# It is for hybrid programme in multiple style on Cirrus.
+# The programme will run 100 times on same set of nodes.
+# It uses 12 nodes and 432 cores.
+# There are 18 threads on a rank and 2 ranks on a node.
+# The output is stored in out*.txt
+
+#!/bin/bash --login
+
+# This is a PBS script for the Tier2 system Cirrus
+
+# PBS job options (name, compute nodes, job time)
+#PBS -N cfd
+#PBS -l walltime=05:00:00
+#PBS -A d154
+#PBS -l place=scatter:excl
+#PBS -l select=12:ncpus=36
+
+module load intel-mpi-17
+module load intel-compilers-17
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+export OMP_NUM_THREADS=18
+
+export I_MPI_PIN_DOMAIN=omp
+
+for ((i=0;i<100;i++));do
+	mpirun -n 24 -ppn 2 ./cfd 432 5000 >out$i.txt
+#one
+

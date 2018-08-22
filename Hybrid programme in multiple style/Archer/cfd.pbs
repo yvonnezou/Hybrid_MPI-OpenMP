@@ -1,0 +1,28 @@
+# ARCHER PBS Script
+# It is for hybrid programme in multiple style on ARCHER.
+# The programme will run 100 times on same set of nodes.
+# It uses 16 nodes and 384 cores.
+# There are 12 threads on a rank and 2 ranks on a node.
+# The output is stored in out*.txt
+
+#!/bin/bash --login
+
+#PBS -l select=16
+#PBS -l walltime=00:05:00
+#PBS -A d154
+#PBS -N cfd
+
+#Change to directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+# Set the number of threads to 12
+# There are 12 OpenMP threads per MPI process
+OMP_NUM_THREADS=12
+export OMP_NUM_THREADS
+export KMP_AFFINITY=disabled
+export MPICH_MAX_THREAD_SAFETY=MPI_THREAD_MULTIPLE
+
+for((i=0;i<100;i++)); do
+	aprun -n 32 -N 2 -d 12 ./cfd 384 5000 >out$i.txt
+done
+

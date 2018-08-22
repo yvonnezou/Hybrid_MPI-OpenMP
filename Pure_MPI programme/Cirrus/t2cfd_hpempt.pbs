@@ -1,0 +1,26 @@
+# Cirrus PBS Script with HPE MPT library
+# It is for pure-MPI programme on Cirrus.
+# The programme will run 100 times on same set of nodes.
+# It uses 12 nodes and 432 cores. 36 cores on each node. 
+# The output is stored in out*.txt
+
+#!/bin/bash --login
+
+# PBS job options (name, compute nodes, job time)
+#PBS -N cfd
+#PBS -l walltime=05:00:00
+#PBS -A d154
+#PBS -l select=12:ncpus=36
+#PBS -l place=scatter:excl
+
+module load mpt
+module load intel-compilers-17
+
+export OMP_NUM_THREADS=1
+
+# Change to the directory that the job was submitted from
+cd $PBS_O_WORKDIR
+
+for((i=0;i<100;i++));do
+	mpiexec_mpt -n 432 -ppn 36 ./cfd 432 5000 >out$i.txt
+done
