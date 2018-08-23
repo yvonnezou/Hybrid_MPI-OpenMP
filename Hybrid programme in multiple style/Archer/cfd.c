@@ -304,7 +304,9 @@ int main(int argc, char **argv)
    * All threads are able to see it.
    *
   **/
-#pragma omp parallel default (none) shared(time_iter_thread,time_comm_thread,time_comp_thread,zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,re,comm,printfreq,rank,checkerr) private(i,j)
+#pragma omp parallel default (none) shared(time_iter_thread,time_comm_thread,time_comp_thread,\
+zettmp,psitmp,zet,psi,n,numiter,irrotational,lm,\
+re,comm,printfreq,rank,checkerr) private(i,j)
   {
   /**
    *
